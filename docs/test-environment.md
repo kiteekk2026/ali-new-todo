@@ -17,3 +17,18 @@ creates or updates the specified local auth user. It refuses cloud endpoints.
 The seeded customers cover deletion with and without invoices. Fourteen invoices
 provide enough fixtures to exercise pagination. Never point an app running
 integration checks at its production database.
+
+## Browser tests
+
+With the local Supabase test stack running and `.env.test.local` filled in as above:
+
+```sh
+pnpm test:seed
+pnpm exec playwright install chromium
+pnpm test:e2e
+```
+
+Playwright starts its own dashboard server at `http://127.0.0.1:3107`.
+The auth suite signs in with the seeded user and checks logout, invalid
+credentials, and redirects from protected pages. Failed runs retain traces in
+`test-results/`. Use test credentials only and share traces privately.
