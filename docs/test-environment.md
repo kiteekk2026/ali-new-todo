@@ -32,3 +32,12 @@ Playwright starts its own dashboard server at `http://127.0.0.1:3107`.
 The auth suite signs in with the seeded user and checks logout, invalid
 credentials, and redirects from protected pages. Failed runs retain traces in
 `test-results/`. Use test credentials only and share traces privately.
+
+Reseed before rerunning the suite if the invoice journey was interrupted. The
+invoice tests cover search and pagination plus a create, edit and delete journey.
+The dashboard and invoice list are scanned with axe for WCAG 2.1 A/AA rules.
+
+GitHub Actions runs the same suite in the `browser` job against its own
+disposable Supabase stack. Failed browser tests can leave a
+`playwright-traces` artifact on the run for three days. Those traces contain
+test data only.

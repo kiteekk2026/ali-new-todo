@@ -42,6 +42,8 @@ const baseURL = 'http://127.0.0.1:3107';
 export default defineConfig({
   testDir: './tests/e2e',
   testMatch: '**/*.e2e.ts',
+  // The seeded tests share one account, and signOut revokes its other sessions.
+  workers: 1,
   use: { baseURL, trace: 'retain-on-failure' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {

@@ -19,9 +19,11 @@ export default async function Page(props: {
 }) {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || '';
-  const currentPage = Number(searchParams?.page) || 1;
-
+  const requestedPage = Number(searchParams?.page);
   const totalPages = await fetchInvoicesPages(query);
+  const currentPage = Number.isSafeInteger(requestedPage) && requestedPage > 0
+    ? Math.min(requestedPage, Math.max(totalPages, 1))
+    : 1;
 
   return (
     <div className="w-full">
@@ -39,7 +41,7 @@ export default async function Page(props: {
       <Table query={query} currentPage={currentPage} />
 
       <div className="mt-5 flex w-full justify-center">
-        <Pagination totalPages={totalPages} />
+        <Pagination totalPages={totalPages} currentPage={currentPage} query={query} />
       </div>
     </div>
   );
