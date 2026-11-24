@@ -2,40 +2,13 @@
 'use server';
 
 import { z } from 'zod';
+import { invoiceInput } from './invoice-schema';
 import postgres from 'postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/app/lib/server';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
-
-const FormSchema = z.object({
-  id: z.string(),
-
-  customerId: z.string({
-    invalid_type_error: 'Please select a customer.',
-  }),
-
-  amount: z.coerce
-    .number()
-    .gt(0, { message: 'Please enter an amount greater than $0.' }),
-
-  status: z.enum(['pending', 'paid'], {
-    invalid_type_error: 'Please select an invoice status.',
-  }),
-
-  date: z.string(),
-});
-
-const CreateInvoice = FormSchema.omit({
-  id: true,
-  date: true,
-});
-
-const UpdateInvoice = FormSchema.omit({
-  id: true,
-  date: true,
-});
 
 export type State = {
   errors?: {
@@ -50,7 +23,7 @@ export async function createInvoice(
   prevState: State,
   formData: FormData,
 ) {
-  const validatedFields = CreateInvoice.safeParse({
+  const validatedFields = invoiceInput.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
     status: formData.get('status'),
@@ -89,7 +62,7 @@ export async function updateInvoice(
   id: string,
   formData: FormData,
 ) {
-  const { customerId, amount, status } = UpdateInvoice.parse({
+  const { customerId, amount, status } = invoiceInput.parse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
     status: formData.get('status'),
