@@ -1,5 +1,4 @@
 import { getDatabase } from './database';
-import { PostgresError } from 'postgres';
 
 export type Resource = 'invoices' | 'customers';
 export type InvoiceInput = {
@@ -58,7 +57,7 @@ export const apiData = {
               VALUES (${body.name}, ${body.email}, '/customers/lee-robinson.png') RETURNING id, name, email`;
         return row;
       } catch (error) {
-        if (error instanceof PostgresError && error.code === '23505') {
+        if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
           throw new DataError(409, 'A customer with this email already exists.');
         }
         throw error;
