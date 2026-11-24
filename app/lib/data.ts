@@ -1,5 +1,5 @@
 
-import postgres from 'postgres';
+import { getDatabase } from './database';
 
 import {
   CustomerField,
@@ -13,13 +13,7 @@ import {
 
 import { formatCurrency } from './utils';
 
-const databaseUrl = process.env.POSTGRES_URL;
-
-if (!databaseUrl) {
-  throw new Error('POSTGRES_URL is not defined');
-}
-
-const sql = postgres(databaseUrl, { ssl: 'require' });
+const sql = getDatabase();
 
 export async function fetchRevenue() {
   try {
