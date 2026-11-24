@@ -6,3 +6,7 @@ For more information, see the [course curriculum](https://nextjs.org/learn) on t
 
 - **Developer:** Ali Nawaz — [@alinawz0](https://github.com/alinawz0)
 - **Review partner:** To be confirmed by the teacher.
+
+### Dashboard REST API
+
+See the [OpenAPI contract](docs/openapi.yaml) and [API usage and peer check](docs/api.md).
