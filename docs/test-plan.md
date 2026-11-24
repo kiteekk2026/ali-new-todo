@@ -27,3 +27,9 @@ Before execution, the target revision builds, fixtures are available, and the da
 Ali prepares the fixtures, executes checks and records the commit, environment, and results. The review partner reviews this plan and checks reproducibility. The teacher validates acceptance when required. Stop writes if the database target is unclear. If Auth is unavailable, mark the check blocked. Record flaky checks and retain CI logs or traces with secrets removed.
 
 See the test tooling ADR for Vitest, Playwright and accessibility decisions.
+
+## S5 unit coverage baseline
+The 12 Vitest cases cover the utility and invoice schema modules. The baseline
+is 75% lines, 70.37% statements, 100% branches and 66.66% functions within those
+two modules. This is a scoped baseline for the unit suite. See [CI](ci.md) for
+reproducing the checks and recording merge evidence.
