@@ -3,7 +3,12 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run",
+    "test:seed": "node --env-file=.env.test.local scripts/seed-test.mjs",
+    "lint": "eslint .",
+    "test:coverage": "vitest run --coverage --coverage.include=app/lib/utils.ts --coverage.include=app/lib/invoice-schema.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@auth/core": "^0.41.3",
@@ -27,10 +32,16 @@
     "zod": "^3.25.17"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.1",
+    "@playwright/test": "^1.65.1",
     "@types/bcrypt": "^5.0.2",
     "@types/node": "22.10.7",
     "@types/react": "19.0.7",
-    "@types/react-dom": "19.0.3"
+    "@types/react-dom": "19.0.3",
+    "@vitest/coverage-v8": "5.1.1",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.4.6",
+    "vitest": "^5.1.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

@@ -83,3 +83,6 @@ Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for branch naming, commit messa
 ## License
 
 This project was created for learning and course work. No separate license has been specified.
+### Dashboard REST API
+
+See the [OpenAPI contract](docs/openapi.yaml) and [API usage and peer check](docs/api.md).

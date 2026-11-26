@@ -1,0 +1,92 @@
+name: Dashboard CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm exec next typegen && pnpm exec tsc --noEmit
+      - run: pnpm test
+      - name: Report unit coverage
+        run: pnpm run test:coverage
+        env:
+          TZ: UTC
+      - name: Build without production credentials
+        run: pnpm build
+        env:
+          POSTGRES_URL: postgres://ci:ci@127.0.0.1:5432/ci
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+          AUTH_SECRET: ci-placeholder-not-for-production
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Start disposable Supabase and prepare test environment
+        run: |
+          npx --yes supabase@3.4.0 init
+          npx --yes supabase@3.4.0 start
+          npx --yes supabase@3.4.0 status -o env > "$RUNNER_TEMP/supabase.env"
+          python3 - <<'PY'
+          import os
+          import secrets
+          from pathlib import Path
+
+          cli_env = dict(
+              line.split('=', 1) for line in
+              (Path(os.environ['RUNNER_TEMP']) / 'supabase.env').read_text().splitlines()
+              if '=' in line
+          )
+          values = {
+              'POSTGRES_URL': cli_env['DB_URL'].strip('"'),
+              'NEXT_PUBLIC_SUPABASE_URL': cli_env['API_URL'].strip('"'),
+              'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY': (
+                  cli_env.get('PUBLISHABLE_KEY') or cli_env['ANON_KEY']
+              ).strip('"'),
+              'SUPABASE_SERVICE_ROLE_KEY': cli_env['SERVICE_ROLE_KEY'].strip('"'),
+              'TEST_USER_EMAIL': 'dashboard@example.test',
+              'TEST_USER_PASSWORD': secrets.token_urlsafe(24),
+          }
+          Path('.env.test.local').write_text(
+              ''.join(f'{key}={value}\n' for key, value in values.items()),
+              encoding='utf-8',
+          )
+          PY
+      - run: pnpm test:seed
+      - run: pnpm test:e2e
+        env:
+          TZ: UTC
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/**/trace.zip
+          if-no-files-found: ignore
+          retention-days: 3
