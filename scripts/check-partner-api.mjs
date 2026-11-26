@@ -1,3 +1,4 @@
+import { assertInvoiceMatchesRequest } from './partner-api-contract.mjs';
 const [base, customerId] = process.argv.slice(2);
 const key = process.env.DASHBOARD_API_KEY;
 if (!base || !customerId || !key) {
@@ -25,11 +26,10 @@ if (typeof invoice.id !== 'string' || !/^[0-9a-f-]{36}$/i.test(invoice.id)) {
   throw new Error('Response did not contain a valid invoice ID. Check the test database for the fixture.');
 }
 try {
-  if (invoice.amountCents !== 1250 || invoice.status !== 'pending') {
-    throw new Error('Created invoice did not match the contract.');
-  }
+  assertInvoiceMatchesRequest(invoice, customerId);
 } finally {
   const cleanup = await fetch(new URL(url.pathname + '/' + invoice.id, url), { ...options, method: 'DELETE' });
   if (cleanup.status !== 204) throw new Error('Fixture cleanup returned ' + cleanup.status);
 }
 console.log('Partner invoice list, create and cleanup matched the contract.');
+
