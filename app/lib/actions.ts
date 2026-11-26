@@ -3,12 +3,10 @@
 
 import { z } from 'zod';
 import { invoiceInput } from './invoice-schema';
-import postgres from 'postgres';
+import { getDatabase } from './database';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/app/lib/server';
-
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+import { createClient } from './server';
 
 export type State = {
   errors?: {
@@ -19,10 +17,18 @@ export type State = {
   message?: string | null;
 };
 
+async function requireDashboardUser() {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) redirect('/login');
+}
+
 export async function createInvoice(
   prevState: State,
   formData: FormData,
 ) {
+  await requireDashboardUser();
+
   const validatedFields = invoiceInput.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
@@ -42,7 +48,7 @@ export async function createInvoice(
   const date = new Date().toISOString().split('T')[0];
 
   try {
-    await sql`
+    await getDatabase()`
       INSERT INTO invoices (customer_id, amount, status, date)
       VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
     `;
@@ -62,6 +68,8 @@ export async function updateInvoice(
   id: string,
   formData: FormData,
 ) {
+  await requireDashboardUser();
+
   const { customerId, amount, status } = invoiceInput.parse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
@@ -70,7 +78,7 @@ export async function updateInvoice(
 
   const amountInCents = amount * 100;
 
-  await sql`
+  await getDatabase()`
     UPDATE invoices
     SET customer_id = ${customerId},
         amount = ${amountInCents},
@@ -83,7 +91,9 @@ export async function updateInvoice(
 }
 
 export async function deleteInvoice(id: string) {
-  await sql`
+  await requireDashboardUser();
+
+  await getDatabase()`
     DELETE FROM invoices
     WHERE id = ${id}
   `;
@@ -117,6 +127,8 @@ export async function createCustomer(
   prevState: CustomerState,
   formData: FormData,
 ) {
+  await requireDashboardUser();
+
   const validatedFields = CreateCustomer.safeParse({
     name: formData.get('name'),
     email: formData.get('email'),
@@ -132,7 +144,7 @@ export async function createCustomer(
   const { name, email } = validatedFields.data;
 
   try {
-    await sql`
+    await getDatabase()`
       INSERT INTO customers (name, email, image_url)
       VALUES (${name}, ${email}, '/customers/lee-robinson.png')
     `;
@@ -168,6 +180,8 @@ export async function updateCustomer(
   prevState: CustomerState,
   formData: FormData,
 ) {
+  await requireDashboardUser();
+
   const validatedFields = CreateCustomer.safeParse({
     name: formData.get('name'),
     email: formData.get('email'),
@@ -183,7 +197,7 @@ export async function updateCustomer(
   const { name, email } = validatedFields.data;
 
   try {
-    await sql`
+    await getDatabase()`
       UPDATE customers
       SET name = ${name},
           email = ${email}
@@ -219,8 +233,10 @@ export async function updateCustomer(
 ========================= */
 
 export async function deleteCustomer(id: string) {
+  await requireDashboardUser();
+
   try {
-    const invoices = await sql`
+    const invoices = await getDatabase()`
       SELECT id
       FROM invoices
       WHERE customer_id = ${id}
@@ -234,7 +250,7 @@ export async function deleteCustomer(id: string) {
       };
     }
 
-    await sql`
+    await getDatabase()`
       DELETE FROM customers
       WHERE id = ${id}
     `;
