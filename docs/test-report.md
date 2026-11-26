@@ -4,7 +4,7 @@
 
 | Level | Coverage | Result |
 | --- | --- | --- |
-| Unit and API handler | Formatting, pagination, invoice validation, API authentication and handler responses | 32 passed |
+| Unit and API handler | Formatting, pagination, invoice validation, API authentication and handler responses | 43 passed |
 | Browser | Session flows, invoice changes, search, pagination and axe checks | 9 passed |
 | Manual peer interoperability | Read and create an invoice through the partner's test API | Client verified locally. Partner run pending. |
 | Exploratory | Invoice charter on the live partner app | Pending. |
