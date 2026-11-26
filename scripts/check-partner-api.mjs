@@ -24,7 +24,10 @@ const invoice = await created.json();
 if (typeof invoice.id !== 'string' || !/^[0-9a-f-]{36}$/i.test(invoice.id)) {
   throw new Error('Response did not contain a valid invoice ID. Check the test database for the fixture.');
 }
-try {
+try {  if (typeof invoice.customerId !== 'string' ||
+      invoice.customerId.toLowerCase() !== customerId.toLowerCase()) {
+    throw new Error('Created invoice belongs to a different customer.');
+  }
   if (invoice.amountCents !== 1250 || invoice.status !== 'pending') {
     throw new Error('Created invoice did not match the contract.');
   }
