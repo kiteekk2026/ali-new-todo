@@ -6,7 +6,7 @@ import { invoiceInput } from './invoice-schema';
 import { getDatabase } from './database';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/app/lib/server';
+import { createClient } from './server';
 
 export type State = {
   errors?: {
@@ -17,10 +17,18 @@ export type State = {
   message?: string | null;
 };
 
+async function requireDashboardUser() {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) redirect('/login');
+}
+
 export async function createInvoice(
   prevState: State,
   formData: FormData,
 ) {
+  await requireDashboardUser();
+
   const validatedFields = invoiceInput.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
@@ -60,6 +68,8 @@ export async function updateInvoice(
   id: string,
   formData: FormData,
 ) {
+  await requireDashboardUser();
+
   const { customerId, amount, status } = invoiceInput.parse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
@@ -81,6 +91,8 @@ export async function updateInvoice(
 }
 
 export async function deleteInvoice(id: string) {
+  await requireDashboardUser();
+
   await getDatabase()`
     DELETE FROM invoices
     WHERE id = ${id}
@@ -115,6 +127,8 @@ export async function createCustomer(
   prevState: CustomerState,
   formData: FormData,
 ) {
+  await requireDashboardUser();
+
   const validatedFields = CreateCustomer.safeParse({
     name: formData.get('name'),
     email: formData.get('email'),
@@ -166,6 +180,8 @@ export async function updateCustomer(
   prevState: CustomerState,
   formData: FormData,
 ) {
+  await requireDashboardUser();
+
   const validatedFields = CreateCustomer.safeParse({
     name: formData.get('name'),
     email: formData.get('email'),
@@ -217,6 +233,8 @@ export async function updateCustomer(
 ========================= */
 
 export async function deleteCustomer(id: string) {
+  await requireDashboardUser();
+
   try {
     const invoices = await getDatabase()`
       SELECT id
